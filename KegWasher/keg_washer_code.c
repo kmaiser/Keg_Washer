@@ -42,9 +42,9 @@ void setOff(uint8_t);
 void purge();
 void purgeSan();
 void rinse();
-void tankFlush();
+void tankFlusher();
 
-int main() {
+int main(int argc, char **argv) {
     //bcm2835_gpio_fsel(PIN, PIN_OUTP);         ----sets pin to output
     //bcm2835_gpio_fsel(PIN, PIN_INPT);         ----sets pin to input
     //bcm2835_gpio_write(PIN, HIGH);            ----turn pin ON
@@ -173,11 +173,11 @@ int main() {
     if (tankFlush == 'Y' || tankFlush == 'y') {
         printf("\nFlushing Tanks");
         //PURGE TANKS CODE - tell operator to open ball-valve, open each pump in sequence until empty, tell to refill with water, run all pumps until empty again
-        tankFlush();    //For Testing - fill in with timed code (only wash for now)         //FIXME
+        tankFlusher();    //For Testing - fill in with timed code (only wash for now)         //FIXME
 
-        printf("\nRefilled Tanks With Water? Y/N: ")
+        printf("\nRefilled Tanks With Water? Y/N: ");
         scanf("%c", &tanksRefilled);
-        if (tanksRefilled == 'Y' || tanksRefilled == 'y') tankFlush();
+        if (tanksRefilled == 'Y' || tanksRefilled == 'y') tankFlusher();
         printf("\nTanks Flushed");
     }
     printf("\nClosing Program");
@@ -193,16 +193,15 @@ void setOn(uint8_t pin){
 
 void setOff(uint8_t pin){
     bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_clr(pin));
+    bcm2835_gpio_clr(pin);
 }
 
 //Purges with CO2
 void purge() {
     printf("/nPurging...");
-    bcm2835_gpio_fsel(sol_CO2Purge, PIN_OUTP);
-    bcm2835_gpio_write(sol_CO2Purge, HIGH);
+    setOn(sol_CO2Purge);
     sleep(1);
-    bcm2835_gpio_write(sol_CO2Purge, LOW);
+    setOff(sol_CO2Purge);
     printf("Purged");
     return 0;
 }
@@ -210,10 +209,9 @@ void purge() {
 //purge w/ CO2 for 2 sec
 void purgeSan(){
     printf("/nPurging San...");
-    bcm2835_gpio_fsel(sol_CO2Purge, PIN_OUTP);
-    bcm2835_gpio_write(sol_CO2Purge, HIGH);
+    setOn(sol_CO2Purge);
     sleep(2);
-    bcm2835_gpio_write(sol_CO2Purge, LOW);
+    setOff(sol_CO2Purge);
     sleep(10);
     printf("Purged San");
     return 0;
@@ -222,14 +220,13 @@ void purgeSan(){
 //Rinses with hot water
 void rinse(){
     printf("/nRinsing...");
-    bcm2835_gpio_fsel(sol_hotRinse, PIN_OUTP);
-    bcm2835_gpio_write(sol_hotRinse, HIGH);
+    setOn(sol_hotRinse);
     sleep(5);
-    bcm2835_gpio_write(sol_hotRinse, LOW);
+    setOff(sol_hotRinse);
     printf("Rinsed");
     return 0;
 }
-void tankFlush() {
+void tankFlusher() {
     setOn(pump_wash);
     bcm2835_gpio_fsel(level_wash_L, BCM2835_GPIO_FSEL_INPT);
     while(bcm2835_gpio_lev(level_wash_L) != HIGH);

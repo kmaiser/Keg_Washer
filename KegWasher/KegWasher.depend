@@ -1,0 +1,7 @@
+# depslib dependency file v1.0
+1595355389 source:/home/pi/Documents/Keg_Washer-master/KegWasher/keg_washer_code.c
+	<bcm2835.h>
+	<unistd.h>
+	<stdio.h>
+	<time.h>
+
