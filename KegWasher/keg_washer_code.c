@@ -15,8 +15,8 @@
 #define level_san_L RPI_BPLUS_GPIO_J8_15
 
 //heating elements (RELAYS)
-#define heat_san RPI_BPLUS_GPIO_J8_12
-#define heat_wash RPI_BPLUS_GPIO_J8_16
+#define heat_san RPI_BPLUS_GPIO_J8_12                       //UNUSED
+#define heat_wash RPI_BPLUS_GPIO_J8_16                      //UNUSED
 
 //pumps (RELAYS)
 #define pump_san RPI_BPLUS_GPIO_J8_18
@@ -29,7 +29,7 @@
 #define sol_wash RPI_BPLUS_GPIO_J8_36
 #define sol_drain RPI_BPLUS_GPIO_J8_37
 #define sol_recycleRinse RPI_BPLUS_GPIO_J8_38
-#define sol_hotRinse RPI_BPLUS_GPIO_J8_38
+#define sol_hotRinse RPI_BPLUS_GPIO_J8_40
 
 //temperature sensors
 #define temp_wash RPI_BPLUS_GPIO_J8_29                      //UNUSED
@@ -52,7 +52,20 @@ int main(int argc, char **argv) {
     //bcm2835_gpio_lev(pin)                     ----READ
 
     if (!bcm2835_init()) return 1;
+    //setup outputs
+    bcm2835_gpio_fsel(pump_san, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pump_recycleRinse, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(pump_wash, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(sol_CO2Purge, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(sol_san, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(sol_wash, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(sol_drain, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(sol_recycleRinse, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_fsel(sol_hotRinse, BCM2835_GPIO_FSEL_OUTP);
 
+    //setup inputs
+    bcm2835_gpio_fsel(level_wash_L, BCM2835_GPIO_FSEL_INPT);
+    bcm2835_gpio_fsel(level_san_L, BCM2835_GPIO_FSEL_INPT);
     char go = 'N';
 
     do {
@@ -82,14 +95,13 @@ int main(int argc, char **argv) {
             purge();
             sleep(10);
         }
+        sleep(10);
 
         //start wash cycle
         printf("\nStarting Wash Cycle");
-        sleep(10);
         setOff(sol_recycleRinse);
         setOn(sol_wash);
         setOn(pump_wash);
-        bcm2835_gpio_fsel(level_wash_L, BCM2835_GPIO_FSEL_INPT);
         while(bcm2835_gpio_lev(level_wash_L) != HIGH);
         setOff(pump_wash);
 
@@ -102,7 +114,6 @@ int main(int argc, char **argv) {
             setOff(sol_CO2Purge);
             sleep(10);
             setOn(pump_wash);
-            bcm2835_gpio_fsel(level_wash_L, BCM2835_GPIO_FSEL_INPT);
             while(bcm2835_gpio_lev(level_wash_L) != HIGH);
             setOff(pump_wash);
         }
@@ -124,7 +135,6 @@ int main(int argc, char **argv) {
         printf("\nStarting Sanitize Cycle");
         setOn(sol_san);
         setOn(pump_san);
-        bcm2835_gpio_fsel(level_san_L, BCM2835_GPIO_FSEL_INPT);
         while(bcm2835_gpio_lev(level_san_L) != HIGH);
         setOff(pump_san);
         purgeSan();
@@ -133,7 +143,6 @@ int main(int argc, char **argv) {
         startTime = clock();
         while (clock() < startTime + (1 * 60 * 1000)) {
             setOn(pump_san);
-            bcm2835_gpio_fsel(level_san_L, BCM2835_GPIO_FSEL_INPT);
             while(bcm2835_gpio_lev(level_san_L) != HIGH);
             setOff(pump_san);
             purgeSan();
@@ -188,14 +197,13 @@ int main(int argc, char **argv) {
 }
 
 void setOn(uint8_t pin){
-    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_set(pin);
-
+    //bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_write(pin, HIGH);
 }
 
 void setOff(uint8_t pin){
-    bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
-    bcm2835_gpio_clr(pin);
+    //bcm2835_gpio_fsel(pin, BCM2835_GPIO_FSEL_OUTP);
+    bcm2835_gpio_write(pin, LOW);
 }
 
 //Purges with CO2
