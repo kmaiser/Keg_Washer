@@ -32,9 +32,6 @@
 			<Add option="-Wall" />
 		</Compiler>
 		<Unit filename="KegWasher.cbp" />
-		<Unit filename="keg_washer_code.c">
-			<Option compilerVar="CC" />
-		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

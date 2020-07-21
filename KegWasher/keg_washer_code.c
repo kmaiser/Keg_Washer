@@ -9,9 +9,9 @@
 #include <time.h>
 
 //level sensors (High and Low)
-#define level_wash_H RPI_BPLUS_GPIO_J8_07
+#define level_wash_H RPI_BPLUS_GPIO_J8_07                   //UNUSED
 #define level_wash_L RPI_BPLUS_GPIO_J8_11
-#define level_san_H RPI_BPLUS_GPIO_J8_13
+#define level_san_H RPI_BPLUS_GPIO_J8_13                    //UNUSED
 #define level_san_L RPI_BPLUS_GPIO_J8_15
 
 //heating elements (RELAYS)
@@ -32,18 +32,17 @@
 #define sol_hotRinse RPI_BPLUS_GPIO_J8_38
 
 //temperature sensors
-#define temp_wash RPI_BPLUS_GPIO_J8_29 // set to 130
-#define temp_san RPI_BPLUS_GPIO_J8_31
+#define temp_wash RPI_BPLUS_GPIO_J8_29                      //UNUSED
+#define temp_san RPI_BPLUS_GPIO_J8_31                       //UNUSED
 
-//lets you use PIN_OUTP for output and PIN_INPT for input
-#define PIN_OUTP BCM2835_GPIO_FSEL_OUTP
-#define PIN_INPT BCM2835_GPIO_FSEL_INPT
+//lets you use BCM2835_GPIO_FSEL_OUTP for output and BCM2835_GPIO_FSEL_INPT for input
 
+void setOn(uint8_t);
+void setOff(uint8_t);
 void purge();
 void purgeSan();
 void rinse();
-void setOn(uint8_t);
-void setOff(uint8_t);
+void tankFlush();
 
 int main() {
     //bcm2835_gpio_fsel(PIN, PIN_OUTP);         ----sets pin to output
@@ -59,7 +58,7 @@ int main() {
     do {
 
         printf("Starting Wash Sequence");
-        printf("/nDraining Old Beer");
+        printf("\nDraining Old Beer");
 
         //open drain
         setOn(sol_drain);
@@ -74,6 +73,7 @@ int main() {
         }
 
         //switches from drain to recycle
+        printf("\nRecycling Rinse Water");
         setOff(sol_drain);
         setOn(sol_recycleRinse);
 
@@ -85,14 +85,16 @@ int main() {
         sleep(10);
 
         //start wash cycle
+        printf("\nStarting Wash Cycle");
         setOff(sol_recycleRinse);
         setOn(sol_wash);
         setOn(pump_wash);
-        bcm2835_gpio_fsel(level_wash_L, PIN_INPT);
+        bcm2835_gpio_fsel(level_wash_L, BCM2835_GPIO_FSEL_INPT);
         while(bcm2835_gpio_lev(level_wash_L) != HIGH);
         setOff(pump_wash);
 
         //Repeat 21-23 until 5 minuets have passed
+        printf("\nStart 5 Min Wash Cycle Loop");
         clock_t startTime = clock();
         while (clock() < startTime + (5 * 60 * 1000)) {
             setOn(sol_CO2Purge);
@@ -100,7 +102,7 @@ int main() {
             setOff(sol_CO2Purge);
             sleep(10);
             setOn(pump_wash);
-            bcm2835_gpio_fsel(level_wash_L, PIN_INPT);
+            bcm2835_gpio_fsel(level_wash_L, BCM2835_GPIO_FSEL_INPT);
             while(bcm2835_gpio_lev(level_wash_L) != HIGH);
             setOff(pump_wash);
         }
@@ -109,6 +111,7 @@ int main() {
         setOff(sol_wash);
 
         //Rinse cycle
+        printf("\nStarting Rinse Cycle");
         setOn(sol_recycleRinse);
         rinse();
         purge();
@@ -118,20 +121,21 @@ int main() {
         setOff(sol_recycleRinse);
 
         //sanitize cycle
+        printf("\nStarting Sanitize Cycle");
         setOn(sol_san);
         setOn(pump_san);
-        bcm2835_gpio_fsel(level_san_L, PIN_INPT);
+        bcm2835_gpio_fsel(level_san_L, BCM2835_GPIO_FSEL_INPT);
         while(bcm2835_gpio_lev(level_san_L) != HIGH);
-        setOff(pump_san);                                  //FIXME???
+        setOff(pump_san);
         purgeSan();
         //repeat 40-43
+        printf("\nStarting 1 Min San Loop");
         startTime = clock();
         while (clock() < startTime + (1 * 60 * 1000)) {
             setOn(pump_san);
-            bcm2835_gpio_fsel(level_san_L, PIN_INPT);
+            bcm2835_gpio_fsel(level_san_L, BCM2835_GPIO_FSEL_INPT);
             while(bcm2835_gpio_lev(level_san_L) != HIGH);
             setOff(pump_san);
-            // ^^^ not in steps 40-43 so unsure                             //FIXME???
             purgeSan();
         }
         setOff(pump_san);
@@ -139,6 +143,7 @@ int main() {
         setOff(sol_san);
 
         //rinse cycle
+        printf("\nStarting Rinse Cycle (Post-San)");
         setOn(sol_recycleRinse);
         rinse();
         purge();
@@ -150,15 +155,34 @@ int main() {
 
         //cycle complete
         setOn(sol_drain);
-                                                                    //light & buzzer?
-        printf("/nComplete");
-        printf("/nAnother Keg to Wash Y/N: ");
+                                                                                            //light & buzzer?
+        printf("\nComplete");
+        printf("\nAnother Keg to Wash? Y/N: ");
         scanf("%c", &go);
 
     } while (go == 'Y' || go == 'y');
+    printf("\nEnding Processes");
 
-        bcm2835_close();
-        return 0;
+    char tankFlush = 'n';
+    char tanksRefilled = 'n';
+    printf("To purge tank please make sure coupler is pointed DOWN THE DRAIN");
+    printf(" - //FOR TESTING ONLY CHECKING WASH");                                          //FIXME
+    printf("\nFlush Tanks? Y/N: ");
+    scanf("%c", &tankFlush);
+
+    if (tankFlush == 'Y' || tankFlush == 'y') {
+        printf("\nFlushing Tanks");
+        //PURGE TANKS CODE - tell operator to open ball-valve, open each pump in sequence until empty, tell to refill with water, run all pumps until empty again
+        tankFlush();    //For Testing - fill in with timed code (only wash for now)         //FIXME
+
+        printf("\nRefilled Tanks With Water? Y/N: ")
+        scanf("%c", &tanksRefilled);
+        if (tanksRefilled == 'Y' || tanksRefilled == 'y') tankFlush();
+        printf("\nTanks Flushed");
+    }
+    printf("\nClosing Program");
+    bcm2835_close();
+    return 0;
 }
 
 void setOn(uint8_t pin){
@@ -205,3 +229,11 @@ void rinse(){
     printf("Rinsed");
     return 0;
 }
+void tankFlush() {
+    setOn(pump_wash);
+    bcm2835_gpio_fsel(level_wash_L, BCM2835_GPIO_FSEL_INPT);
+    while(bcm2835_gpio_lev(level_wash_L) != HIGH);
+    setOff(pump_wash);
+    return 0;
+}
+
