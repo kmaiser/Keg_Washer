@@ -31,7 +31,13 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Linker>
+			<Add library="/home/pi/Downloads/bcm2835-1.64/src/libbcm2835.a" />
+		</Linker>
 		<Unit filename="KegWasher.cbp" />
+		<Unit filename="keg_washer_code.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Extensions>
 			<code_completion />
 			<envvars />

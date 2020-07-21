@@ -82,10 +82,10 @@ int main(int argc, char **argv) {
             purge();
             sleep(10);
         }
-        sleep(10);
 
         //start wash cycle
         printf("\nStarting Wash Cycle");
+        sleep(10);
         setOff(sol_recycleRinse);
         setOn(sol_wash);
         setOn(pump_wash);
@@ -168,6 +168,7 @@ int main(int argc, char **argv) {
     printf("To purge tank please make sure coupler is pointed DOWN THE DRAIN");
     printf(" - //FOR TESTING ONLY CHECKING WASH");                                          //FIXME
     printf("\nFlush Tanks? Y/N: ");
+    fflush(stdin);
     scanf("%c", &tankFlush);
 
     if (tankFlush == 'Y' || tankFlush == 'y') {
@@ -175,6 +176,7 @@ int main(int argc, char **argv) {
         //PURGE TANKS CODE - tell operator to open ball-valve, open each pump in sequence until empty, tell to refill with water, run all pumps until empty again
         tankFlusher();    //For Testing - fill in with timed code (only wash for now)         //FIXME
 
+        fflush(stdin);
         printf("\nRefilled Tanks With Water? Y/N: ");
         scanf("%c", &tanksRefilled);
         if (tanksRefilled == 'Y' || tanksRefilled == 'y') tankFlusher();
@@ -198,33 +200,30 @@ void setOff(uint8_t pin){
 
 //Purges with CO2
 void purge() {
-    printf("/nPurging...");
+    printf("\nPurging...");
     setOn(sol_CO2Purge);
     sleep(1);
     setOff(sol_CO2Purge);
     printf("Purged");
-    return 0;
 }
 
 //purge w/ CO2 for 2 sec
 void purgeSan(){
-    printf("/nPurging San...");
+    printf("\nPurging San...");
     setOn(sol_CO2Purge);
     sleep(2);
     setOff(sol_CO2Purge);
     sleep(10);
     printf("Purged San");
-    return 0;
 }
 
 //Rinses with hot water
-void rinse(){
-    printf("/nRinsing...");
+void rinse() {
+    printf("\nRinsing...");
     setOn(sol_hotRinse);
     sleep(5);
     setOff(sol_hotRinse);
     printf("Rinsed");
-    return 0;
 }
 void tankFlusher() {
     setOn(pump_wash);
