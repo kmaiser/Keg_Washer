@@ -1,0 +1,11 @@
+# depslib dependency file v1.0
+1595444818 source:/home/pi/Documents/Keg_Washer-master/KegWasher/KegFlush.c
+	<bcm2835.h>
+	<unistd.h>
+	<stdio.h>
+
+1595446808 source:/home/pi/Documents/Keg_Washer_Tank_Flush/Keg_Flush/KegFlush.c
+	<bcm2835.h>
+	<unistd.h>
+	<stdio.h>
+
